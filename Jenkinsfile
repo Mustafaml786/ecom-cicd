@@ -9,26 +9,18 @@ pipeline {
             }
         }
         
-        // Optional: Remove or disable the build stage if you don't need to build the project.
-        // stage('Build') {
-        //     steps {
-        //         echo 'Skipping build stage since only SonarQube analysis is required.'
-        //     }
-        // }
-
         stage('SonarQube Analysis') {
             steps {
-                // Set up the SonarQube environment (make sure 'SonarQube' matches the name you configured)
+                // Set up the SonarQube environment (ensure 'SonarQube' matches your configured SonarQube server name in Jenkins)
                 withSonarQubeEnv('SonarQube') {
-                    // If you configured the SonarQube Scanner as a tool in Jenkins, you can locate it by name.
-                    def scannerHome = tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-                    
-                    // Run the SonarQube scanner.
-                    // If you have a sonar-project.properties file, this command is sufficient.
-                    bat "\"${scannerHome}\\bin\\sonar-scanner\""
-                    
-                    // Alternatively, you can pass properties directly:
-                    // bat "\"${scannerHome}\\bin\\sonar-scanner\" -Dsonar.projectKey=your_project_key -Dsonar.sources=."
+                    // Wrap the Groovy code in a script block
+                    script {
+                        // Locate the SonarQube Scanner tool installed/configured in Jenkins Global Tool Configuration.
+                        def scannerHome = tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
+                        
+                        // Execute the SonarQube scanner using the batch command (use 'sh' instead of 'bat' if on Linux)
+                        bat "\"${scannerHome}\\bin\\sonar-scanner\""
+                    }
                 }
             }
         }
