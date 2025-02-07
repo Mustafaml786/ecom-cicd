@@ -1,58 +1,39 @@
 pipeline {
-    // Run on any available agent
     agent any
-
-    // Trigger a build by polling SCM every 5 minutes.
-    triggers {
-        pollSCM('H/2 * * * *')
-    }
-
-    environment {
-        // Define the Docker image name (adjust as necessary)
-        DOCKER_IMAGE = "ecom-cicd"
-    }
 
     stages {
         stage('Checkout') {
             steps {
-                // Check out the code from the GitHub repository
-                // Adjust the branch if necessary (e.g., 'main' or 'master')
-                git url: 'https://github.com/Mustafaml786/ecom-cicd.git', branch: 'main'
+                // Checkout your repository
+                git url: 'https://github.com/Mustafaml786/ecom-cicd.git'
             }
         }
-
-        stage('Build') {
-            steps {
-                // Run your build command.
-                // Here we assume a Maven project. For Windows, we use the 'bat' command.
-                bat "mvn clean install"
-            }
-        }
+        
+        // Optional: Remove or disable the build stage if you don't need to build the project.
+        // stage('Build') {
+        //     steps {
+        //         echo 'Skipping build stage since only SonarQube analysis is required.'
+        //     }
+        // }
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    // Get the SonarQube Scanner tool (configured in Global Tool Configuration)
-                    def scannerHome = tool 'SonarScanner'
+                // Set up the SonarQube environment (make sure 'SonarQube' matches the name you configured)
+                withSonarQubeEnv('SonarQube') {
+                    // If you configured the SonarQube Scanner as a tool in Jenkins, you can locate it by name.
+                    def scannerHome = tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
                     
-                    // Run the SonarQube analysis.
-                    // withSonarQubeEnv uses the SonarQube server settings (name must match your Jenkins config)
-                    withSonarQubeEnv('SonarQubeServer') {
-                        // On Windows, run the sonar-scanner batch file.
-                        bat "\"${scannerHome}\\bin\\sonar-scanner.bat\""
-                    }
+                    // Run the SonarQube scanner.
+                    // If you have a sonar-project.properties file, this command is sufficient.
+                    bat "\"${scannerHome}\\bin\\sonar-scanner\""
+                    
+                    // Alternatively, you can pass properties directly:
+                    // bat "\"${scannerHome}\\bin\\sonar-scanner\" -Dsonar.projectKey=your_project_key -Dsonar.sources=."
                 }
             }
         }
-
-        stage('Build Docker Image') {
-            steps {
-                // Build a Docker image using the Dockerfile in the repository root.
-                bat "docker build -t ${DOCKER_IMAGE}:latest ."
-            }
-        }
     }
-
+    
     post {
         always {
             echo 'Pipeline execution completed.'
