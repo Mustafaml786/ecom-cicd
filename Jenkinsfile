@@ -12,7 +12,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 // Set up the SonarQube environment (ensure 'SonarQube' matches your configured SonarQube server name in Jenkins)
-                withSonarQubeEnv('SonarQube') {
+                withSonarQubeEnv('Sonarqube') {
                     // Wrap the Groovy code in a script block
                     script {
                         // Locate the SonarQube Scanner tool installed/configured in Jenkins Global Tool Configuration.
